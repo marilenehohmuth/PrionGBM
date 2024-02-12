@@ -29,7 +29,6 @@ GSC_Tumor_Metadata <- read.csv(
     "data/GSC_Tumor_Meta.csv",
     header = TRUE,
     row.names = 1,
-    sep = ";",
     check.names = FALSE
 )
 # Keep only GSCs, excluding whole-tumour cells.
