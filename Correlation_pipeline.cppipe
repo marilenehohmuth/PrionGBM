@@ -1,0 +1,255 @@
+CellProfiler Pipeline: http://www.cellprofiler.org
+Version:5
+DateRevision:426
+GitHash:
+ModuleCount:18
+HasImagePlaneDetails:False
+
+Images:[module_num:1|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['To begin creating your project, use the Images module to compile a list of files and/or folders that you want to analyze. You can also specify a set of rules to include only the desired files in your selected folders.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    :
+    Filter images?:Images only
+    Select the rule criteria:and (file does containregexp "WT")
+
+Metadata:[module_num:2|svn_version:'Unknown'|variable_revision_number:6|show_window:False|notes:['The Metadata module optionally allows you to extract information describing your images (i.e, metadata) which will be stored along with your measurements. This information can be contained in the file name and/or location, or in an external file.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Extract metadata?:No
+    Metadata data type:Text
+    Metadata types:{"ChannelNumber": "text", "FileLocation": "float", "Frame": "integer", "Plate": "text", "Series": "text", "Site": "text", "Well": "text"}
+    Extraction method count:1
+    Metadata extraction method:Extract from file/folder names
+    Metadata source:File name
+    Regular expression to extract from file name:^(?P<Plate>.*)_(?P<Well>[A-P][0-9]{2})_s(?P<Site>[0-9])_w(?P<ChannelNumber>[0-9])
+    Regular expression to extract from folder name:(?P<Date>[0-9]{4}_[0-9]{2}_[0-9]{2})$
+    Extract metadata from:All images
+    Select the filtering criteria:and (file does contain "")
+    Metadata file location:Elsewhere...|
+    Match file and image metadata:[]
+    Use case insensitive matching?:No
+    Metadata file name:None
+    Does cached metadata exist?:No
+
+NamesAndTypes:[module_num:3|svn_version:'Unknown'|variable_revision_number:8|show_window:False|notes:['The NamesAndTypes module allows you to assign a meaningful name to each image by which other modules will refer to it.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Assign a name to:Images matching rules
+    Select the image type:Grayscale image
+    Name to assign these images:DNA
+    Match metadata:[]
+    Image set matching method:Order
+    Set intensity range from:Image metadata
+    Assignments count:3
+    Single images count:0
+    Maximum intensity:255.0
+    Process as 3D?:Yes
+    Relative pixel spacing in X:1.0
+    Relative pixel spacing in Y:1.0
+    Relative pixel spacing in Z:1.0
+    Select the rule criteria:and (file does contain "488")
+    Name to assign these images:CD44
+    Name to assign these objects:Cell
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "647")
+    Name to assign these images:PRPC
+    Name to assign these objects:Cell
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "DAPI")
+    Name to assign these images:Nuclei
+    Name to assign these objects:Nucleus
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+
+Groups:[module_num:4|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['The Groups module optionally allows you to split your list of images into image subsets (groups) which will be processed independently of each other. Examples of groupings include screening batches, microtiter plates, time-lapse movies, etc.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to group your images?:No
+    grouping metadata count:1
+    Metadata category:None
+
+GaussianFilter:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Nuclei
+    Name the output image:GaussianFilterNuclei
+    Sigma:1
+
+GaussianFilter:[module_num:6|svn_version:'Unknown'|variable_revision_number:1|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:PRPC
+    Name the output image:GaussianFilterPRPC
+    Sigma:1
+
+GaussianFilter:[module_num:7|svn_version:'Unknown'|variable_revision_number:1|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:CD44
+    Name the output image:GaussianFilterCD44
+    Sigma:1
+
+Threshold:[module_num:8|svn_version:'Unknown'|variable_revision_number:12|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:GaussianFilterNuclei
+    Name the output image:ThresholdNuclei
+    Threshold strategy:Global
+    Thresholding method:Minimum Cross-Entropy
+    Threshold smoothing scale:0.0
+    Threshold correction factor:1.0
+    Lower and upper bounds on threshold:0.0,1.0
+    Manual threshold:0.0
+    Select the measurement to threshold with:None
+    Two-class or three-class thresholding?:Two classes
+    Log transform before thresholding?:No
+    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
+    Size of adaptive window:50
+    Lower outlier fraction:0.05
+    Upper outlier fraction:0.05
+    Averaging method:Mean
+    Variance method:Standard deviation
+    # of deviations:2.0
+    Thresholding method:Minimum Cross-Entropy
+
+Watershed:[module_num:9|svn_version:'Unknown'|variable_revision_number:3|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:ThresholdNuclei
+    Name the output object:ObjetoNuclei
+    Use advanced settings?:No
+    Generate from:Distance
+    Markers:None
+    Mask:Leave blank
+    Connectivity:1
+    Compactness:0.0
+    Footprint:8
+    Downsample:2
+    Separate watershed labels:No
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+
+Threshold:[module_num:10|svn_version:'Unknown'|variable_revision_number:12|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:GaussianFilterCD44
+    Name the output image:ThresholdCD44
+    Threshold strategy:Global
+    Thresholding method:Otsu
+    Threshold smoothing scale:0.0
+    Threshold correction factor:0.6
+    Lower and upper bounds on threshold:0.0,1.0
+    Manual threshold:0.0
+    Select the measurement to threshold with:None
+    Two-class or three-class thresholding?:Three classes
+    Log transform before thresholding?:No
+    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
+    Size of adaptive window:50
+    Lower outlier fraction:0.05
+    Upper outlier fraction:0.05
+    Averaging method:Mean
+    Variance method:Standard deviation
+    # of deviations:2.0
+    Thresholding method:Minimum Cross-Entropy
+
+ImageMath:[module_num:11|svn_version:'Unknown'|variable_revision_number:5|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Operation:Subtract
+    Raise the power of the result by:1.0
+    Multiply the result by:1.0
+    Add to result:0.0
+    Set values less than 0 equal to 0?:Yes
+    Set values greater than 1 equal to 1?:Yes
+    Replace invalid values with 0?:Yes
+    Ignore the image masks?:No
+    Name the output image:Citoplasma
+    Image or measurement?:Image
+    Select the first image:ThresholdCD44
+    Multiply the first image by:1.0
+    Measurement:
+    Image or measurement?:Image
+    Select the second image:ThresholdNuclei
+    Multiply the second image by:1.0
+    Measurement:
+
+ConvertImageToObjects:[module_num:12|svn_version:'Unknown'|variable_revision_number:1|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Citoplasma
+    Name the output object:ObjetoCiotplasma
+    Convert to boolean image:Yes
+    Preserve original labels:No
+    Background label:0
+    Connectivity:0
+
+MeasureObjectSizeShape:[module_num:13|svn_version:'Unknown'|variable_revision_number:3|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select object sets to measure:ObjetoCiotplasma, ObjetoNuclei
+    Calculate the Zernike features?:No
+    Calculate the advanced features?:No
+
+FilterObjects:[module_num:14|svn_version:'Unknown'|variable_revision_number:10|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:True]
+    Select the objects to filter:ObjetoCiotplasma
+    Name the output objects:FilterObjectsCitoplasma
+    Select the filtering mode:Measurements
+    Select the filtering method:Limits
+    Select the objects that contain the filtered objects:None
+    Select the location of the rules or classifier file:Elsewhere...|
+    Rules or classifier file name:rules.txt
+    Class number:1
+    Measurement count:1
+    Additional object count:0
+    Assign overlapping child to:Both parents
+    Keep removed objects as a separate set?:No
+    Name the objects removed by the filter:RemovedObjects
+    Select the measurement to filter by:AreaShape_Volume
+    Filter using a minimum measurement value?:Yes
+    Minimum value:10000
+    Filter using a maximum measurement value?:No
+    Maximum value:1.0
+    Allow fuzzy feature matching?:No
+
+FilterObjects:[module_num:15|svn_version:'Unknown'|variable_revision_number:10|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the objects to filter:ObjetoNuclei
+    Name the output objects:FilterObjectsNuclei
+    Select the filtering mode:Measurements
+    Select the filtering method:Limits
+    Select the objects that contain the filtered objects:None
+    Select the location of the rules or classifier file:Elsewhere...|
+    Rules or classifier file name:rules.txt
+    Class number:1
+    Measurement count:1
+    Additional object count:0
+    Assign overlapping child to:Both parents
+    Keep removed objects as a separate set?:No
+    Name the objects removed by the filter:RemovedObjects
+    Select the measurement to filter by:AreaShape_Volume
+    Filter using a minimum measurement value?:Yes
+    Minimum value:10000
+    Filter using a maximum measurement value?:No
+    Maximum value:1.0
+    Allow fuzzy feature matching?:No
+
+MeasureObjectIntensity:[module_num:16|svn_version:'Unknown'|variable_revision_number:4|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:CD44, PRPC
+    Select objects to measure:FilterObjectsCitoplasma
+
+MeasureColocalization:[module_num:17|svn_version:'Unknown'|variable_revision_number:5|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:CD44, PRPC
+    Set threshold as percentage of maximum intensity for the images:20
+    Select where to measure correlation:Within objects
+    Select objects to measure:FilterObjectsCitoplasma
+    Run all metrics?:Yes
+    Calculate correlation and slope metrics?:Yes
+    Calculate the Manders coefficients?:No
+    Calculate the Rank Weighted Colocalization coefficients?:No
+    Calculate the Overlap coefficients?:No
+    Calculate the Manders coefficients using Costes auto threshold?:No
+    Method for Costes thresholding:Faster
+
+ExportToSpreadsheet:[module_num:18|svn_version:'Unknown'|variable_revision_number:13|show_window:True|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the column delimiter:Comma (",")
+    Add image metadata columns to your object data file?:Yes
+    Add image file and folder names to your object data file?:Yes
+    Select the measurements to export:Yes
+    Calculate the per-image mean values for object measurements?:Yes
+    Calculate the per-image median values for object measurements?:No
+    Calculate the per-image standard deviation values for object measurements?:No
+    Output file location:Default Input Folder sub-folder|Desktop\\Rodrigo\\Cell Profiler\\Imagens Mari\\Mono\\U87 WT
+    Create a GenePattern GCT file?:No
+    Select source of sample row name:Metadata
+    Select the image to use as the identifier:None
+    Select the metadata to use as the identifier:None
+    Export all measurement types?:Yes
+    Press button to select measurements:FilterObjectsCitoplasma|Intensity_MassDisplacement_PRPC,FilterObjectsCitoplasma|Intensity_MassDisplacement_CD44,FilterObjectsCitoplasma|Intensity_StdIntensityEdge_PRPC,FilterObjectsCitoplasma|Intensity_StdIntensityEdge_CD44,FilterObjectsCitoplasma|Intensity_MeanIntensityEdge_CD44,FilterObjectsCitoplasma|Intensity_MeanIntensityEdge_PRPC,FilterObjectsCitoplasma|Intensity_UpperQuartileIntensity_PRPC,FilterObjectsCitoplasma|Intensity_UpperQuartileIntensity_CD44,FilterObjectsCitoplasma|Intensity_MinIntensityEdge_PRPC,FilterObjectsCitoplasma|Intensity_MinIntensityEdge_CD44,FilterObjectsCitoplasma|Intensity_MedianIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MedianIntensity_CD44,FilterObjectsCitoplasma|Intensity_IntegratedIntensity_CD44,FilterObjectsCitoplasma|Intensity_IntegratedIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MADIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MADIntensity_CD44,FilterObjectsCitoplasma|Intensity_MinIntensity_CD44,FilterObjectsCitoplasma|Intensity_MinIntensity_PRPC,FilterObjectsCitoplasma|Intensity_StdIntensity_CD44,FilterObjectsCitoplasma|Intensity_StdIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MeanIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MeanIntensity_CD44,FilterObjectsCitoplasma|Intensity_LowerQuartileIntensity_CD44,FilterObjectsCitoplasma|Intensity_LowerQuartileIntensity_PRPC,FilterObjectsCitoplasma|Intensity_IntegratedIntensityEdge_CD44,FilterObjectsCitoplasma|Intensity_IntegratedIntensityEdge_PRPC,FilterObjectsCitoplasma|Intensity_MaxIntensityEdge_PRPC,FilterObjectsCitoplasma|Intensity_MaxIntensityEdge_CD44,FilterObjectsCitoplasma|Intensity_MaxIntensity_PRPC,FilterObjectsCitoplasma|Intensity_MaxIntensity_CD44,FilterObjectsCitoplasma|Correlation_Correlation_CD44_PRPC,Image|FileName_CD44,Image|Count_FilterObjectsNuclei
+    Representation of Nan/Inf:NaN
+    Add a prefix to file names?:Yes
+    Filename prefix:MyExpt_Co-localization
+    Overwrite existing files without warning?:No
