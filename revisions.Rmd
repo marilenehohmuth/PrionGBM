@@ -1,0 +1,272 @@
+---
+title: "revisions"
+output: html_document
+date: "2024-09-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r install packages}
+#install.packages(c("survival", "survminer", "dplyr", "ggplot2"))
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r libraries, echo=FALSE}
+# Load libraries
+library(survival)
+library(survminer)
+library(dplyr)
+library(ggplot2)
+```
+
+Load clinical data
+
+```{r}
+
+### read txt file
+pheno <- read.delim('~/Documents/research/PostdoctoralResearch_2020/Projects/marilene_revisions/2024-09-25_TCGA_GBM_pheno.txt', header = TRUE, stringsAsFactors = FALSE)
+
+
+head(pheno)
+
+
+```
+
+```{r}
+
+exp <- read.table('~/Documents/research/PostdoctoralResearch_2020/Projects/marilene_revisions/2024-09-25_TCGA_GBM_expression.txt', header = TRUE, stringsAsFactors = F)
+
+head(exp)
+
+```
+
+Check data
+
+```{r}
+
+# Check clinical data
+#str(pheno)
+#summary(pheno)
+
+# Check expression data
+#str(exp)
+#summary(exp)
+
+
+```
+
+Merge clinical and exp data
+
+```{r}
+merged_data <- merge(pheno, exp, by='Sample')
+
+```
+
+Handle missing values
+
+```{r}
+
+colSums(is.na(merged_data))
+
+```
+
+```{r}
+
+merged_data <- na.omit(merged_data)
+
+head(merged_data)
+```
+
+Prepare data for survival analysis
+
+```{r}
+merged_data$survival <- as.numeric(merged_data$survival)
+merged_data$status <- as.numeric(merged_data$status)
+
+```
+
+Define expression groups
+
+```{r}
+prnp_med <- median(merged_data$PRNP, na.rm = T)
+cd44_med <- median(merged_data$CD44, na.rm = T)
+                      
+```
+
+Create high and low expression groups
+
+```{r}
+merged_data$PRNP_group <- ifelse(merged_data$PRNP >= prnp_med, 'High', 'Low')
+merged_data$CD44_group <- ifelse(merged_data$CD44 >= cd44_med, 'High', 'Low')
+```
+
+Create combined expression groups
+
+```{r}
+merged_data$exp_grp <- paste(merged_data$PRNP_group, merged_data$CD44_group, sep='_')
+```
+
+Perform survival analysis
+
+```{r}
+
+surv_obj <- Surv(time=merged_data$survival, event=merged_data$status)
+
+surv_fit <- survfit(surv_obj ~ exp_grp, data=merged_data)
+```
+
+Plot survival curves
+
+```{r}
+
+# Plot survival curves
+ggsurvplot(
+  surv_fit,
+  data = merged_data,
+  pval = TRUE,
+  risk.table = F,
+#  heights = c(0.55,0.45),
+  legend.title = "Expression Groups",
+  legend.labs = c("High_PRNP_High_CD44", "High_PRNP_Low_CD44", "Low_PRNP_High_CD44", "Low_PRNP_Low_CD44"),
+  palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3")
+)
+
+# Generate the risk table separately
+ggsurvtable(
+  surv_fit,
+  data = merged_data,
+  fontsize = 4,              # Adjust font size
+  y.text = TRUE,             # Show y-axis text labels
+  y.text.col = TRUE          # Color y-axis text by groups
+)
+```
+
+```{}
+```
+
+```{r}
+
+# Create a binary grouping
+merged_data$Group <- ifelse(merged_data$exp_grp == "High_High", "PRNP_High_CD44_High", "Others")
+
+# Fit survival curves
+surv_fit_binary <- survfit(surv_obj ~ Group, data = merged_data)
+
+# Plot survival curves
+ggsurvplot(
+  surv_fit_binary,
+  data = merged_data,
+  pval = TRUE,
+  risk.table = F,
+  legend.title = "Groups",
+  legend.labs = c("PRNP High / CD44 High", "Others"),
+  palette = c("#E41A1C", "#377EB8")
+)
+
+
+```
+
+Subset data by subtype
+
+```{r}
+# Get unique subtypes
+subtypes <- unique(merged_data$Subtype)
+
+# Print subtypes
+print(subtypes)
+
+```
+
+```{r}
+
+# Initialize an empty list to store plots
+survival_plots <- list()
+
+
+```
+
+```{r}
+# Loop through each subtype
+for (subtype in subtypes) {
+  # Subset data for the current subtype
+  subtype_data <- merged_data %>%
+    filter(Subtype == subtype)
+  
+  # Check if there are enough samples in each group
+  group_counts <- table(subtype_data$Group)
+  print(paste("Subtype:", subtype))
+  print(group_counts)
+  
+  # Ensure there are at least some samples in both groups
+  if (length(unique(subtype_data$Group)) < 2) {
+    print(paste("Not enough groups in subtype", subtype, "for survival analysis. Skipping..."))
+    next
+  }
+  
+  # Create survival object
+  surv_object <- Surv(time = subtype_data$survival, event = subtype_data$status)
+  
+  # Fit survival curves
+  surv_fit <- survfit(surv_object ~ Group, data = subtype_data)
+  
+  # Generate survival plot
+  surv_plot <- ggsurvplot(
+    surv_fit,
+    data = subtype_data,
+    pval = TRUE,
+    risk.table = TRUE,
+    risk.table.height = 0.25,
+    title = paste("Survival in", subtype, "Subtype"),
+    xlab = "Time (months)",
+    ylab = "Survival Probability",
+    legend.title = "Expression Group",
+    legend.labs = c("PRNP High / CD44 High", "Others"),
+    palette = c("#E41A1C", "#377EB8"),
+    ggtheme = theme_minimal()
+  )
+  
+  # Add the plot to the list
+  survival_plots[[subtype]] <- surv_plot
+}
+
+```
+
+```{r}
+# Display the plot for Mesenchymal subtype
+print(survival_plots[["Mesenchymal"]])
+
+# Display the plot for Classical subtype
+print(survival_plots[["Classical"]])
+
+# Display the plot for Proneural subtype
+print(survival_plots[["Proneural"]])
+
+```
+
+```{r}
+
+# Extract the ggsurvplots
+plots <- lapply(survival_plots, function(x) x$plot + x$theme)
+
+# Arrange plots in a grid
+library(gridExtra)
+
+# Determine the number of plots
+num_plots <- length(plots)
+
+# Arrange plots
+do.call(grid.arrange, c(plots, ncol = num_plots))
+
+
+```
